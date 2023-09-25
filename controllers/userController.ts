@@ -63,15 +63,45 @@ export const getUsers = asyncHandler(async (req: Request, res: Response) => {
 });
 
 // Get a specific User by ID (GET)
-export const getUserByID = [
-
-];
+export const getUserByID = asyncHandler(async (req: Request, res: Response) => {
+    const userExists = await User.findById(req.params.id, '_id username');
+    if(!userExists){
+        res.status(404).json({message: "No user found"});
+        return;
+    }
+    res.status(200).json(userExists);
+});
 
 // Update a specific User by ID (PATCH)
 export const updateUserByID = [
+    body('username')
+        .isLength({min:5, max:20})
+        .withMessage('Username must be between 5 and 20 characters long')
+        .isAlphanumeric()
+        .withMessage('Username must be alphanumeric'),
 
-];
-// Delete a specific User by ID (DELETE)
-export const deleteUserByID = [
+    body('email')
+        .isEmail(),
 
+    body('password')
+        .isLength({min: 6})
+        .withMessage('Password must be at least 6 characters long'),
+
+    asyncHandler(async (req: Request, res: Response) => {
+        const errors = validationResult(req);
+        if(!errors.isEmpty()){
+            res.status(400).json(errors.array);
+            return;
+        }
+
+        const userExists = await User.findById(req.params.id, '_id username');
+        if(!userExists){
+            res.status(404).json({message: "No user found"});
+            return;
+        }
+
+        await User.findByIdAndUpdate(req.params.id, req.body);
+        const updatedUser = await User.findById(req.params.id, '_id username');
+        res.status(200).json(updatedUser);
+    }),
 ];
