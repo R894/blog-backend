@@ -14,25 +14,8 @@ import bcrypt from 'bcryptjs';
 
 
 dotenv.config();
-
+//const isPasswordValid = await bcrypt.compare(password, user.password);
 // Set up passport
-passport.use(
-    new LocalStrategy(async (username, password, done) => {
-      try {
-        const user = await User.findOne({ username: username });
-        if (!user) {
-          return done(null, false, { message: "Incorrect username" });
-        };
-        const isPasswordValid = await bcrypt.compare(password, user.password);
-        if (!isPasswordValid) {
-            return done(null, false, { message: "Incorrect password" });
-        }
-        return done(null, user);
-      } catch(err) {
-        return done(err);
-      };
-    })
-);
 
 passport.use(
   new JwtStrategy(
@@ -55,21 +38,6 @@ passport.use(
   )
 )
 
-
-passport.serializeUser((user: any, done) => {
-    done(null, user._id);
-});
-  
-passport.deserializeUser(async (id, done) => {
-    try {
-      const user = await User.findById(id);
-      done(null, user);
-    } catch(err) {
-      done(err);
-    };
-});
-
-
 const app = express();
 passport.initialize();
 app.use(express.json());
@@ -80,30 +48,33 @@ main().catch(err => console.log(err));
 async function main() {
     const db = process.env.DB_URL;
     if(!db){
-        throw new Error("DB_URL process env variable must be defined")
+        throw new Error("DB_URL process env variable must be defined");
     }
 
     await mongoose.connect(db);
 }
 
 // Login Endpoint
-app.post('/login', (req: Request, res: Response) => {
-  passport.authenticate('local', { session: false }, (err: any, user: any) => {
-      if (err || !user) {
-          return res.status(401).json({ message: 'Authentication failed' });
-      }
+app.post('/login', async (req: Request, res: Response) => {
+  const {username, password} = req.body;
+  const user = await User.findOne({ username });
 
-      // Generate a JWT token with user ID as the payload
-      if (!process.env.JWT_SECRET) {
-        throw new Error('JWT_SECRET environment variable must be defined');
-      }
-      
-      const token = jwt.sign({ sub: user._id }, process.env.JWT_SECRET, {
-          expiresIn: '1h',
-      });
+  if (!user) {
+    return res.status(401).json({ error: 'Authentication failed' });
+  }
 
-      res.json({ token });
-  })(req, res);
+  const validPassword = await bcrypt.compare(password, user.password)
+
+  if (!validPassword) {
+    return res.status(401).json({ error: 'Authentication failed' });
+  }
+  if(!process.env.JWT_SECRET){
+    throw new Error("JWT_SECRET process env variable must be defined"); 
+  }
+  const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+
+  res.json({ token });
+
 });
 
 // Configure routes
