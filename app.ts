@@ -14,7 +14,6 @@ import bcrypt from 'bcryptjs';
 
 
 dotenv.config();
-//const isPasswordValid = await bcrypt.compare(password, user.password);
 // Set up passport
 
 passport.use(
@@ -25,7 +24,7 @@ passport.use(
     },
     async (jwtPayload, done) => {
       try{
-        const user = await User.findById(jwtPayload.sub);
+        const user = await User.findById(jwtPayload.userId);
         if (user) {
           return done(null, user);
         } else {
