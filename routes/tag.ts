@@ -1,5 +1,6 @@
 import express, { Request, Response, Router } from 'express';
 import * as tagController from '../controllers/tagController';
+
 const router: Router = Router();
 
 // List all Tags (GET)
