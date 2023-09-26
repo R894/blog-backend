@@ -8,9 +8,14 @@ import mongoose from 'mongoose';
 import session from 'express-session';
 import passport from 'passport';
 import { Strategy as LocalStrategy } from 'passport-local';
+import { Strategy as JwtStrategy, ExtractJwt } from 'passport-jwt';
+import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
+
 
 dotenv.config();
 
+// Set up passport
 passport.use(
     new LocalStrategy(async (username, password, done) => {
       try {
@@ -18,15 +23,38 @@ passport.use(
         if (!user) {
           return done(null, false, { message: "Incorrect username" });
         };
-        if (user.password !== password) {
-          return done(null, false, { message: "Incorrect password" });
-        };
+        const isPasswordValid = await bcrypt.compare(password, user.password);
+        if (!isPasswordValid) {
+            return done(null, false, { message: "Incorrect password" });
+        }
         return done(null, user);
       } catch(err) {
         return done(err);
       };
     })
 );
+
+passport.use(
+  new JwtStrategy(
+    {
+      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      secretOrKey: process.env.JWT_SECRET,
+    },
+    async (jwtPayload, done) => {
+      try{
+        const user = await User.findById(jwtPayload.sub);
+        if (user) {
+          return done(null, user);
+        } else {
+            return done(null, false);
+        }
+      }catch(error){
+        return done(error, false);
+      }
+    }
+  )
+)
+
 
 passport.serializeUser((user: any, done) => {
     done(null, user._id);
@@ -57,6 +85,26 @@ async function main() {
 
     await mongoose.connect(db);
 }
+
+// Login Endpoint
+app.post('/login', (req: Request, res: Response) => {
+  passport.authenticate('local', { session: false }, (err: any, user: any) => {
+      if (err || !user) {
+          return res.status(401).json({ message: 'Authentication failed' });
+      }
+
+      // Generate a JWT token with user ID as the payload
+      if (!process.env.JWT_SECRET) {
+        throw new Error('JWT_SECRET environment variable must be defined');
+      }
+      
+      const token = jwt.sign({ sub: user._id }, process.env.JWT_SECRET, {
+          expiresIn: '1h',
+      });
+
+      res.json({ token });
+  })(req, res);
+});
 
 // Configure routes
 app.use('/users', userRoutes);
