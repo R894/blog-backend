@@ -68,12 +68,18 @@ export const updatePostById = [
 ];
 
 // Delete specific post by ID (DELETE)
-export const deletePostById = asyncHandler(async (req: Request, res: Response) => {
+export const deletePostById = asyncHandler(async (req: any, res: Response) => {
     const post = await Post.findById(req.params.id);
     if(!post){
         res.status(404).json({message: 'Post not found'});
         return;
     }
+
+    if(post.author.toString() !== req.user._id.toString()){
+        res.status(403).json({message: 'Cannot delete a post that doesnt belong to you'})
+        return;
+    }
+
     await Post.findByIdAndRemove(req.params.id);
-    res.status(204);
+    res.status(204).send();
 });
