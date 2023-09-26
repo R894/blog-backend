@@ -29,7 +29,7 @@ export const createPost = [
         const { title, content } = req.body;
         const post = new Post({ title: title, content: content, author: req.user });
         post.save();
-        res.status(200).json(post);
+        res.status(200).json("Post created successfully");
     }),
 ];
 
