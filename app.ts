@@ -10,6 +10,7 @@ import passport from 'passport';
 import { Strategy as JwtStrategy, ExtractJwt } from 'passport-jwt';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
+import cors from 'cors';
 
 
 dotenv.config();
@@ -39,6 +40,7 @@ passport.use(
 const app = express();
 passport.initialize();
 app.use(express.json());
+app.use(cors());
 const port = process.env.PORT || 3000;
 
 main().catch(err => console.log(err));
