@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import asyncHandler from "express-async-handler";
 import Post from "../models/post";
+import { IUser } from '../models/user';
 const { body, validationResult } = require("express-validator");
 
 // Get all posts (GET)
@@ -35,11 +36,12 @@ export const createPost = [
 
 // Get specific post by ID (GET)
 export const getPostById = asyncHandler(async (req: Request, res: any) => {
-    const post = await Post.findById(req.params.id);
+    const post = await Post.findById(req.params.id).populate('author', 'username');
     if(!post){
         res.status(404).json({message: 'Post not found'});
         return;
     }
+    const postObject = post.toObject();
     res.status(200).json(post);
 });
 

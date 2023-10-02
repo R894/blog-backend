@@ -1,6 +1,7 @@
 import express, { Request, Response, Router } from 'express';
 import * as postController from '../controllers/postController';
 import passport from 'passport';
+//import commentsRouter from './comments';
 const router: Router = Router();
 
 // Get all posts (GET)
@@ -18,5 +19,6 @@ router.patch('/:id', passport.authenticate('jwt', { session: false }), postContr
 // Delete specific post by ID (DELETE)
 router.delete('/:id', passport.authenticate('jwt', { session: false }), postController.deletePostById);
 
+//router.use('/comments', commentsRouter);
 
 export default router;

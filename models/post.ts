@@ -8,6 +8,7 @@ interface IPost extends Document {
   pubDate: Date;
   comments: Schema.Types.ObjectId[];
   tags: Schema.Types.ObjectId[];
+  authorName?: string;
 }
 
 const postSchema = new Schema<IPost>({
