@@ -1,7 +1,6 @@
 import { Request, Response } from 'express';
 import asyncHandler from "express-async-handler";
 import Post from "../models/post";
-import { IUser } from '../models/user';
 const { body, validationResult } = require("express-validator");
 
 // Get all posts (GET)
