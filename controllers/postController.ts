@@ -35,7 +35,7 @@ export const createPost = [
 
 // Get specific post by ID (GET)
 export const getPostById = asyncHandler(async (req: Request, res: any) => {
-    const post = await Post.findById(req.params.id).populate('author', 'username');
+    const post = await Post.findById(req.params.id).populate('author', 'username').populate({path: 'comments', populate: {path: 'user', select:'username'}});
     if(!post){
         res.status(404).json({message: 'Post not found'});
         return;

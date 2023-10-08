@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import asyncHandler from "express-async-handler";
 import Comment from "../models/comment";
 import Post from "../models/post";
+import User from "../models/user";
 const { body, validationResult } = require("express-validator");
 
 export const getAllComments = asyncHandler(async (req, res) => {
@@ -30,7 +31,8 @@ export const createComment = [
         res.status(404).json({message:"post not found"});
         return;
       }
-      const comment = new Comment({ user: req.user, content: content, author: req.user });
+      const comment = new Comment({ user: req.user, content: content });
+      console.log(req.user);
       await comment.save();
       post.comments.push(comment._id);
       await post.save();
